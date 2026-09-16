@@ -10,6 +10,12 @@ Since Krea2Edit is an edit model, each pose also gets an **Apply edit** box for 
 
 **ComfyUI's own "Install Missing Custom Nodes" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.
 
+**Install via [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) if you can** — it installs each package's Python dependencies automatically. If you install any of these by hand (`git clone` into `custom_nodes`), that step does NOT happen on its own; you also have to run its `requirements.txt` yourself, or it'll fail to import at startup with something like `ModuleNotFoundError: No module named 'piexif'` (a real, common one from ComfyUI-Impact-Pack specifically) and every node it provides (e.g. `FaceDetailer`) will show up as "not registered" the first time you try to use it. To fix that after a manual clone:
+```
+<path to ComfyUI>\python_embeded\python.exe -m pip install -r <path to the node's folder>\requirements.txt
+```
+then restart ComfyUI and check its startup log for a clean `### Loading: <package name>` line with no `[ERROR]` underneath.
+
 - **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.
 - **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.
 - **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.
