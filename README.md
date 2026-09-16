@@ -1,93 +1,60 @@
 # Muse Character Sheet
 
-[2026-09-15] Single ComfyUI node that wraps the "Krea2 Character Sheet - Aligned
-Views" workflow (`Muse Collective Krea2 Character Sheet - Aligned Views.json`)
-into one interactive UI, modelled on the same confirm/re-roll pattern used by
-`Muse-MiniMax-Seed-Hunt-Studio` and the Director nodes in this custom_nodes
-folder.
+[Krea 2](https://huggingface.co/krea/Krea-2-Turbo) is Krea AI's instruction-based image editing model. **Muse Character Sheet** is a single ComfyUI node that generates a full 5-pose character turnaround (portrait, front, left profile, right profile, back) from one mannequin pose guide + one character reference photo, using Krea 2 Edit with identity-preserving LoRAs.
 
-## What it does
+Instead of wiring up five separate Krea2Edit chains by hand, the node runs all five internally and gives you a **Confirm** / **New seed** button per pose in its own panel. Confirm is a pure local lock — it doesn't submit anything on its own. Once every pose is confirmed, click **Build final sheet now** to assemble the final 4096x2304 sheet.
 
-- Two required image inputs: `guide_image` (the 5-panel mannequin pose guide
-  sheet) and `character_image` (a single reference photo of the person/outfit).
-- Three optional MODEL/CLIP/VAE sockets (`model_override`/`clip_override`/
-  `vae_override`) - leave them unconnected and the node loads its own model
-  from the `unet_name`/`identity_lora`/`filter_bypass_lora`/`clip_name`/
-  `vae_name` widgets as before. Connect them (e.g. from a
-  [Muse Model Loader](https://github.com/) instance) and they override the
-  widgets - any LoRAs already baked into an incoming model travel with it, so
-  the node skips applying `identity_lora`/`filter_bypass_lora` itself in that
-  case. (e.g. from a "Muse Model Loader" node elsewhere in this custom_nodes
-  tree, or any other node that outputs MODEL/CLIP/VAE.)
-- On first queue it generates all five poses (portrait close-up, front, left
-  profile, right profile, back) with the same Krea2 models/LoRAs/prompts as the
-  original workflow.
-- The node's own panel shows all five previews with a **Confirm** and a
-  **New seed** (re-roll) button per pose.
-  - Re-roll only regenerates that one pose (new random seed), leaving the
-    other four untouched.
-  - Confirm is a pure local toggle - it locks that pose (disabling re-roll/
-    prompt-editing on it) but does **not** submit anything on its own, not
-    even on the 5th/last pose. The only thing that ever builds the sheet is
-    clicking **Build final sheet now**.
-- Output: the assembled 4096x2304 character sheet (`character_sheet`), blocked
-  (silently, not as an error) until every pose is confirmed and Build final
-  sheet has actually been clicked.
-- A completed sheet resets the node's confirm/seed locks automatically, so the
-  next Queue Prompt (e.g. after swapping in a different character/guide photo)
-  starts a fresh sheet instead of instantly re-finalizing the old one.
-- Confirmed poses persist to your ComfyUI output folder (not the ephemeral
-  temp folder), so a confirmed lock survives a ComfyUI restart.
+Since Krea2Edit is an edit model, each pose also gets an **Apply edit** box for targeted fixes (e.g. "add high heel shoes") without a full regenerate, plus an **Edit all poses** box to apply one instruction to every unconfirmed pose at once. "New seed" on a pose with an active edit re-rolls *that edit*, not the original. A **seed_mode** widget (`random`/`fixed`) controls whether re-running the same photos after a completed sheet gives you a fresh random set or a reproducible one.
 
-## Why it works the way it does
+## ⚠️ Required custom nodes — install these BEFORE you run anything
 
-ComfyUI has no live pause/resume inside a single node execution - Python can
-only act from inside a real `/prompt` submission. So every button click that
-needs new pixels (re-roll, apply edited prompt, build final sheet) fires its
-own small `app.queuePrompt()` call from the JS side; state that must survive
-between those calls (which poses are generated, their seeds, confirm flags)
-rides in a hidden `state_json` widget serialized with the node, plus an
-in-process cache in `character_sheet_director.py` keyed by the node's
-`unique_id`. Confirm itself is deliberately the one action that does NOT
-queue anything - it's a pure client-side lock toggle.
+**ComfyUI's own "Install Missing Custom Nodes" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.
 
-## One deliberate deviation from the source workflow JSON
+- **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.
+- **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.
+- **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.
+- **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).
 
-The source workflow chains `Krea2EditModelPatch` -> `Krea2NormalizedAttentionGuidance`
-as two separate nodes. The currently installed `krea2-nag` package's plain
-`Krea2NormalizedAttentionGuidance` now raises `ValueError` if it's applied to a
-model that already has the `krea2_edit` wrapper (i.e. already patched by
-`Krea2EditModelPatch`) - it tells you to use the combined node instead. This
-node therefore calls `Krea2EditNormalizedAttentionGuidance` (the combined
-edit-patch + NAG node) directly on the base LoRA model, passing the same
-source_latent/source_image/ref_boost/target_latent arguments that the old
-workflow split across two nodes. Functionally equivalent (same docstring:
-"source-reference attention stays on the positive path; NAG is applied only to
-target image tokens"), but it's the only wiring the currently installed
-package will actually run without erroring.
+This repo also bundles **Muse Sheet: Align Figure Height** (`MuseSheetAlignFigure`), used internally to size/align every panel in the final sheet — no separate install needed.
 
-## Model widgets
+## Model Links
 
-`unet_name` / `identity_lora` / `filter_bypass_lora` / `clip_name` / `vae_name`
-default to whatever is first in your installed lists - pick the same files the
-source workflow used, or leave them alone and connect a model loader to the
-optional override sockets instead:
-- unet: `krea2_turbo_int8_convrot.safetensors`
-- identity_lora: `Krea2\\krea2_identity_edit_v1_2.safetensors`
-- filter_bypass_lora: `Krea2\\krea2filterbypass3_fp32.safetensors`
-- clip: `qwen3vl_4b_fp8_scaled.safetensors` (type `krea2`)
-- vae: `qwen_image_vae.safetensors`
+### Diffusion model (used by the `unet_name` widget)
 
-`ref_boost` (default 2.0) / `ref_boost_a` (default 4.0) match the source
-workflow's actual runtime values (the outer `Seed`/`JWIntegerToFloat` nodes it
-fed into `Krea2EditModelPatch` - not the 10/3 defaults baked into the widget,
-which were overridden by those links).
+[🤗 Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2)
 
-## Guide-sheet crop rects
+**diffusion_models**
+- [krea2_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors) (13.5 GB)
 
-The five pose crop rectangles are tuned to the original 1670x942 mannequin
-guide layout and scale proportionally if you feed in a differently-sized guide
-image - but they assume the same panel ORDER and proportions (portrait, front,
-right-profile, left-profile, back, left-to-right in the guide sheet). A
-differently laid-out guide sheet will need new crop rects in `GUIDE_CROPS` in
-`character_sheet_director.py`.
+### Text encoder (`clip_name`, type `krea2`)
+
+- [qwen3vl_4b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) (5.24 GB) — same repo as above, `text_encoders/` subfolder
+
+### VAE (`vae_name`)
+
+- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) (254 MB) — same repo, `vae/` subfolder
+
+### LoRAs
+
+[🤗 conradlocke/krea2-identity-edit](https://huggingface.co/conradlocke/krea2-identity-edit)
+- [krea2_identity_edit_v1_2.safetensors](https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_identity_edit_v1_2.safetensors) — `identity_lora` widget. The official Identity Edit LoRA behind `comfyui-krea2edit`.
+
+[🤗 ivanlf98/DetailerKrea](https://huggingface.co/ivanlf98/DetailerKrea)
+- [Detailer-KREA2.safetensors](https://huggingface.co/ivanlf98/DetailerKrea/resolve/main/Detailer-KREA2.safetensors) — used as `lora_3` in the Muse Model Loader instance feeding this node.
+
+[🤗 uzumix/krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors)
+- [krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors/resolve/main/krea2filterbypass3.safetensors) — `filter_bypass_lora` widget (save it locally as `krea2filterbypass3_fp32.safetensors`, or just keep the downloaded filename and point the widget at whatever you call it).
+
+## Model Storage Locations
+
+- `ComfyUI/models/diffusion_models/` — `krea2_turbo_int8_convrot.safetensors`
+- `ComfyUI/models/text_encoders/` — `qwen3vl_4b_fp8_scaled.safetensors`
+- `ComfyUI/models/vae/` — `qwen_image_vae.safetensors`
+- `ComfyUI/models/loras/Krea2/` — `krea2_identity_edit_v1_2.safetensors`, `krea2filterbypass3_fp32.safetensors`, `Detailer-KREA2.safetensors`
+- `ComfyUI/models/ultralytics/bbox/` — `face_yolov8m.pt` *(only needed if you enable Face Detail; ships/auto-downloads with Impact-Subpack)*
+
+## Links
+- [Krea 2 on Hugging Face](https://huggingface.co/krea/Krea-2-Turbo)
+- [🤗 Comfy-Org/Krea-2 (ComfyUI-ready weights)](https://huggingface.co/Comfy-Org/Krea-2)
+- [Muse Character Sheet on GitHub](https://github.com/muse-collective-26/muse-character-sheet)
+- [Muse Model Loader on GitHub](https://github.com/muse-collective-26/muse-model-loader)

@@ -18,6 +18,7 @@ used by Muse-MiniMax-Seed-Hunt-Studio / Director in this same custom_nodes tree.
 """
 import hashlib
 import json
+import random
 
 import torch
 
@@ -44,12 +45,28 @@ GUIDE_CROPS = {
 }
 
 # Target (latent-space) pixel resolution per pose. Portrait keeps its own native
-# size; the four full-body views share the aligned-figure canvas size.
+# size. Front/back get the full-width canvas since a front-on silhouette is
+# genuinely that wide (shoulder to shoulder). [2026-09-22] Left/right profile
+# used to share that same 544-wide canvas, but a true side-on silhouette is
+# only chest-to-back deep - much narrower than shoulder width - so the model
+# was widening/stockifying the body to fill a frame built for a front-on
+# pose (Andy: "they don't look like they represent the normal height of the
+# person"). Narrowed to 416 (divisible by 16 for Klein's EmptyFlux2LatentImage
+# requirement) with enough margin left for an outstretched arm/bag strap/hair
+# without clipping. Height is unchanged, so MuseSheetAlignFigure's fixed
+# figure_height/bottom_margin in ALIGN_BODY_KW still lines every panel up at
+# the same final height - only the pre-alignment generation canvas is
+# narrower for these two poses. Reference-image conditioning (guide_for_gen,
+# character_image) is resolution-independent of this (Krea2EditNormalizedAttentionGuidance's
+# fit_mode="fit" re-derives its reference natively from source_image+vae
+# rather than requiring source_latent to match target_latent's shape -
+# confirmed by reading krea2-nag/nodes.py), so no other alignment/crop
+# constant needs to change alongside this.
 TARGET_SIZE = {
     "01_portrait": (544, 976),
     "02_front": (544, 1784),
-    "03_left_profile": (544, 1784),
-    "04_right_profile": (544, 1784),
+    "03_left_profile": (416, 1784),
+    "04_right_profile": (416, 1784),
     "05_back": (544, 1784),
 }
 
@@ -214,15 +231,18 @@ def _signature(guide_image, character_image, unet_name, identity_lora, filter_by
         round(float(ref_boost), 4), round(float(ref_boost_a), 4), int(steps), round(float(cfg), 4),
         bool(face_detail), face_detail_type, face_detail_sampler, face_detail_scheduler,
         round(float(face_detail_denoise), 4),
-        # [2026-09-19] Overrides are live MODEL/CLIP/VAE objects, not filenames -
-        # id() changes whenever the upstream loader (e.g. Muse Model Loader)
-        # actually re-executes and hands back a new object, which is exactly
-        # the signal needed to invalidate a stale session. Connecting/
-        # disconnecting a socket also changes None<->int here, so switching
-        # between manual widgets and an override correctly resets the session.
-        id(model_override) if model_override is not None else None,
-        id(clip_override) if clip_override is not None else None,
-        id(vae_override) if vae_override is not None else None,
+        # [2026-09-19] Deliberately NOT including id(model_override)/id(clip_override)/
+        # id(vae_override) here anymore. The idea was that id() changing would mean
+        # the upstream loader re-executed with a genuinely different model - but
+        # object identity across separate /prompt submissions isn't reliable to key
+        # a session-wipe off: a single reroll click on ONE pose (nothing about the
+        # model config touched at all) still ended up invalidating the whole
+        # session and forcing all 5 poses to regenerate (confirmed via ComfyUI's
+        # own history: a 1-pose reroll took ~93s, essentially the same as a fresh
+        # 5-pose run). A wrongly-missed model swap is a low-cost mistake (rerolling
+        # a pose or two makes it obvious); a wrongly-forced full session wipe on
+        # every single click defeats the entire point of the confirm/reroll UI.
+        model_override is not None, clip_override is not None, vae_override is not None,
     ]
     return hashlib.sha1(json.dumps(payload).encode("utf-8")).hexdigest()
 
@@ -396,6 +416,31 @@ def _generate_pose(pose_idx, guide_image, character_image, char_latent, models, 
     return clean_image, mask
 
 
+def _load_preview_pixels(state, index):
+    """[2026-09-20] Core file lookup, split out of _restore_confirmed_preview
+    so it can also be used as a BEST-EFFORT restore for the "edit" action
+    (see run()) - that path has nothing wrong with it if there simply isn't a
+    prior generation to edit yet (e.g. right after a restart wiped the
+    in-process session), it just skips gracefully. Returns pixels or None,
+    never raises - _restore_confirmed_preview below is what turns a miss into
+    a hard failure, since a confirmed lock actually has to hold.
+    """
+    import os
+    import numpy as np
+    from PIL import Image
+    previews = state.get("previews") or []
+    item = previews[index] if index < len(previews) else None
+    if not item or item.get("type") not in ("temp", "output"):
+        return None
+    base = folder_paths.get_temp_directory() if item["type"] == "temp" else folder_paths.get_output_directory()
+    base = os.path.realpath(base)
+    path = os.path.realpath(os.path.join(base, item.get("subfolder", ""), item.get("filename", "")))
+    if os.path.commonpath([base, path]) != base or not os.path.isfile(path):
+        return None
+    with Image.open(path) as im:
+        return torch.from_numpy(np.array(im.convert("RGB"), dtype=np.float32) / 255.0).unsqueeze(0)
+
+
 def _restore_confirmed_preview(state, index, seed, prompt):
     """Reload a confirmed pose's accepted pixels from its saved preview file
     instead of silently regenerating it. A confirmed pose is a lock - that
@@ -411,31 +456,72 @@ def _restore_confirmed_preview(state, index, seed, prompt):
     mask via RMBG here (cheap, and only runs once per pose per restore) fixes
     that gap.
     """
-    import os
-    import numpy as np
-    from PIL import Image
-    previews = state.get("previews") or []
-    item = previews[index] if index < len(previews) else None
-    if not item or item.get("type") not in ("temp", "output"):
-        raise ValueError(
-            f"Confirmed pose {index + 1} has no saved preview to restore from. "
-            f"Unconfirm it to regenerate, or confirm it again once it's been generated."
-        )
-    base = folder_paths.get_temp_directory() if item["type"] == "temp" else folder_paths.get_output_directory()
-    base = os.path.realpath(base)
-    path = os.path.realpath(os.path.join(base, item.get("subfolder", ""), item.get("filename", "")))
-    if os.path.commonpath([base, path]) != base or not os.path.isfile(path):
+    pixels = _load_preview_pixels(state, index)
+    if pixels is None:
         raise ValueError(
             f"Confirmed pose {index + 1}'s saved preview file is missing on disk "
             f"(temp previews can get cleaned up over time). Unconfirm it to regenerate."
         )
-    with Image.open(path) as im:
-        pixels = torch.from_numpy(np.array(im.convert("RGB"), dtype=np.float32) / 255.0).unsqueeze(0)
     # The saved image already had RMBG applied (white background) before it was
     # written - re-run RMBG here just to recover a matching foreground mask,
     # not to redo the background cleanup itself.
     _, mask, _ = _node("RMBG").process_image(image=pixels, **RMBG_KW)
     return {"seed": seed, "prompt": prompt, "image": pixels, "mask": mask}
+
+
+def _edit_pose(pose_idx, source_image, character_image, instruction, char_latent, models, seed,
+               ref_boost, ref_boost_a, steps, cfg,
+               face_detail, face_detail_type, face_detail_sampler, face_detail_scheduler, face_detail_denoise):
+    """[2026-09-20] Targeted follow-up edit on a pose's OWN already-generated
+    pixels (e.g. "add high heel shoes") - not a fresh regenerate from the
+    guide/character references. Krea2Edit is an edit model just like Klein,
+    so this is the same mechanism as _generate_pose: source_image is this
+    pose's own prior output (standing in for the cropped/aligned guide crop),
+    instruction stands in for the pose's base prompt. character_image stays
+    wired in as the second reference (identity/outfit anchor), same as normal
+    generation - an edit like "add shoes" still needs to know whose shoes.
+    The pose's own stored base prompt is left untouched by this (see the
+    "edit" action handling in run()), so a later normal re-roll still
+    regenerates from the original pose description, not from whatever
+    one-off edit instruction was typed here.
+    """
+    pose_name = POSE_NAMES[pose_idx]
+    target_w, target_h = TARGET_SIZE[pose_name]
+    target_latent = _node("EmptyLatentImage").generate(width=target_w, height=target_h, batch_size=1)[0]
+    source_latent = _node("VAEEncode").encode(vae=models["vae"], pixels=source_image)[0]
+
+    pose_ref_boost = float(ref_boost) * POSE_REF_BOOST_MULTIPLIER.get(pose_name, 1.0)
+
+    nag_model = _node("Krea2EditNormalizedAttentionGuidance").patch(
+        model=models["model"], nag_negative=_get_neg_cond(models, pose_name), source_latent=source_latent,
+        phi=4.0, tau=2.5, alpha=0.25, sigma_start=1000.0, sigma_end=0.0,
+        source_latent_b=char_latent, ref_boost=pose_ref_boost, ref_boost_a=float(ref_boost_a),
+        fit_mode="fit", ref_boost_mask=None, vae=models["vae"],
+        source_image=source_image, source_image_b=character_image, target_latent=target_latent,
+    )[0]
+    positive = _node("Krea2EditGroundedEncode").encode(
+        clip=models["clip"], prompt=instruction,
+        image=source_image, image_b=character_image, grounding_px=768, system_prompt="",
+    )[0]
+    negative = _node("Krea2EditGroundedEncode").encode(
+        clip=models["clip"], prompt="",
+        image=source_image, image_b=character_image, grounding_px=768, system_prompt="",
+    )[0]
+    sampled = _node("KSampler").sample(
+        model=nag_model, seed=int(seed), steps=int(steps), cfg=float(cfg),
+        sampler_name="euler", scheduler="simple",
+        positive=positive, negative=negative, latent_image=target_latent, denoise=1.0,
+    )[0]
+    decoded = _node("VAEDecode").decode(vae=models["vae"], samples=sampled)[0]
+
+    if face_detail:
+        decoded = _face_detail(
+            decoded, nag_model, positive, negative, models, seed, cfg,
+            face_detail_type, face_detail_sampler, face_detail_scheduler, face_detail_denoise,
+        )
+
+    clean_image, mask, _ = _node("RMBG").process_image(image=decoded, **RMBG_KW)
+    return clean_image, mask
 
 
 def _assemble_final(sess, models):
@@ -491,6 +577,7 @@ class MuseCharacterSheetDirector:
                 "face_detail_sampler": (comfy.samplers.KSampler.SAMPLERS, {"default": "dpmpp_2m"}),
                 "face_detail_scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"default": "simple"}),
                 "face_detail_denoise": ("FLOAT", {"default": 0.30, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "seed_mode": (["random", "fixed"], {"default": "random", "tooltip": "What starting seeds a fresh run gets AFTER a completed sheet resets (not the per-pose New seed button, which always picks a fresh random seed regardless). 'random' means running again with the same guide/character photos produces different poses without needing new images; 'fixed' always starts from the same seeds (41001-41005), so a re-run reproduces the same result."}),
                 "state_json": ("STRING", {"multiline": True, "default": json.dumps(DEFAULT_STATE)}),
             },
             # [2026-09-19] Optional overrides, e.g. from Muse Model Loader - purely
@@ -522,7 +609,7 @@ class MuseCharacterSheetDirector:
     def run(self, guide_image, character_image, unet_name, identity_lora, filter_bypass_lora,
             clip_name, vae_name, ref_boost, ref_boost_a, steps, cfg,
             face_detail, face_detail_type, face_detail_sampler, face_detail_scheduler, face_detail_denoise,
-            state_json, unique_id, model_override=None, clip_override=None, vae_override=None):
+            seed_mode, state_json, unique_id, model_override=None, clip_override=None, vae_override=None):
         guide_image = _ensure_rgb(guide_image)
         character_image = _ensure_rgb(character_image)
         try:
@@ -594,6 +681,143 @@ class MuseCharacterSheetDirector:
             i = int(action["pose"])
             if not confirmed[i]:  # a locked pose ignores a stray reroll request
                 seeds[i] = int(action["seed"])
+
+        def run_edit(i, source_image, instruction):
+            """Runs _edit_pose and stores the result, tagged with the
+            instruction and the SOURCE it was applied to (edit_source_image) -
+            that tag is what makes reroll_edit() below possible: re-running
+            the same instruction with a new seed from the same starting
+            point, instead of stacking onto whatever the previous edit
+            produced. A plain fresh generation (the normal to_generate loop)
+            always overwrites sess["poses"][i] with a brand-new dict that has
+            no edit_instruction/edit_source_image keys at all, so an old edit
+            tag can never survive into a genuinely fresh pose by accident.
+            [2026-09-23] Deliberately does NOT fold the pose's base prompt in
+            here (an earlier attempt at that did) - every POSE_PROMPTS entry
+            contains "Retain ALL clothing, facial features and hair", which
+            directly contradicts any edit instruction that changes clothing,
+            and was confirmed to cause visible color bleed/merging (Andy: "the
+            weird saturated color... merging things together"). instruction
+            alone is what actually gets sent as text conditioning."""
+            image, mask = _edit_pose(
+                i, source_image, character_image, instruction, sess["char_latent"], models,
+                seeds[i], ref_boost, ref_boost_a, steps, cfg,
+                face_detail, face_detail_type, face_detail_sampler, face_detail_scheduler, face_detail_denoise,
+            )
+            sess["poses"][i] = {
+                "seed": seeds[i], "prompt": prompts[i], "image": image, "mask": mask,
+                "edit_instruction": instruction, "edit_source_image": source_image,
+            }
+            comfy.model_management.soft_empty_cache()
+
+        def apply_edit(i, instruction):
+            """[2026-09-20] A one-off targeted edit of a pose's OWN already-
+            generated pixels (e.g. "add high heel shoes") - not a fresh
+            regenerate from the guide/character references. Runs before
+            to_generate is computed, so the edited result is already in
+            sess["poses"] by the time that's built - since seed/prompt for
+            this pose are left unchanged, the normal to_generate equality
+            check naturally leaves it alone afterward, no special exclusion
+            needed. Returns True if it actually ran. Shared by both the
+            single-pose "edit" action and "edit_all".
+            """
+            instruction = (instruction or "").strip()
+            if confirmed[i] or not instruction:
+                return False
+            if sess["poses"].get(i) is None:
+                # Best-effort recovery from the pose's own last saved preview
+                # file - same reasoning as the confirmed-pose restore above,
+                # but non-fatal: an edit request right after a restart (or a
+                # settings change that wiped this unconfirmed pose) should
+                # try to recover the pixels rather than silently falling
+                # through to a normal fresh regeneration that discards the
+                # edit instruction with zero feedback.
+                pixels = _load_preview_pixels(state, i)
+                if pixels is not None:
+                    sess["poses"][i] = {"seed": seeds[i], "prompt": prompts[i], "image": pixels, "mask": None}
+            if sess["poses"].get(i) is None:
+                return False
+            pose = sess["poses"][i]
+            prior_instruction = pose.get("edit_instruction")
+            if prior_instruction:
+                # [2026-09-22] Anchor off the SAME pristine pre-edit pixels
+                # every time (edit_source_image), not this edit's own output -
+                # this is a full denoise=1.0 regeneration guided to resemble
+                # its source, not a touch-up, so repeatedly feeding it its own
+                # prior output compounds like a photocopy of a photocopy
+                # (visible as color drift after 3-4 stacked edits). Folding
+                # the new instruction in alongside the old one keeps this a
+                # SINGLE full regeneration off a clean source instead of a
+                # chain of them.
+                base_image = pose["edit_source_image"]
+                combined_instruction = f"{prior_instruction}; {instruction}"
+            else:
+                base_image = pose["image"]
+                combined_instruction = instruction
+            pose_name = POSE_NAMES[i]
+            print(f"[MuseCharacterSheetDirector] editing {pose_name}: {combined_instruction}", flush=True)
+            run_edit(i, base_image, combined_instruction)
+            return True
+
+        def reroll_edit(i, new_seed):
+            """[2026-09-20] "New seed" on a pose that currently has an active
+            edit re-runs THAT SAME edit instruction with a new seed, sourced
+            from edit_source_image (the pixels the edit was originally
+            applied to) - not the base pose, and not the previous edit
+            result. Without this, the only "New seed" available reverted to
+            the un-edited pose every time, discarding the edit entirely -
+            exactly the behavior Andy flagged. Returns True if it actually
+            re-rolled; False means "nothing to reroll here" (no active edit
+            tracked, most likely because a ComfyUI restart wiped the
+            in-process session - edit_source_image has no disk-backed
+            recovery the way confirmed-pose pixels do), and the caller falls
+            back to a normal base reroll instead of silently doing nothing.
+            """
+            if confirmed[i]:
+                return False
+            pose = sess["poses"].get(i)
+            instruction = pose.get("edit_instruction") if pose else None
+            source_image = pose.get("edit_source_image") if pose else None
+            if not instruction or source_image is None:
+                return False
+            seeds[i] = int(new_seed)
+            pose_name = POSE_NAMES[i]
+            print(f"[MuseCharacterSheetDirector] re-rolling edit on {pose_name}: {instruction} (seed={seeds[i]})", flush=True)
+            run_edit(i, source_image, instruction)
+            return True
+
+        if action and action.get("type") == "edit":
+            apply_edit(int(action["pose"]), action.get("instruction"))
+        elif action and action.get("type") == "edit_all":
+            # [2026-09-20] Same edit, applied to every UNCONFIRMED pose in one
+            # go - confirmed/locked poses are silently skipped, same lock
+            # semantics as everything else in this node.
+            instruction = action.get("instruction")
+            for i in range(5):
+                apply_edit(i, instruction)
+        elif action and action.get("type") == "reroll_edit":
+            i = int(action["pose"])
+            if not reroll_edit(i, action["seed"]):
+                # Nothing to reroll (see reroll_edit's docstring) - fall back
+                # to a normal base reroll rather than doing nothing at all.
+                if not confirmed[i]:
+                    seeds[i] = int(action["seed"])
+        elif not action and seed_mode == "random":
+            # [2026-09-23] A bare "hit Run" (no button clicked - action is
+            # None) used to just replay whatever was already cached, since
+            # nothing about seeds/prompts/settings had changed - correct for
+            # avoiding wasted GPU work, but not what Andy actually wants:
+            # a normal ComfyUI workflow with a random seed regenerates every
+            # single time you queue it, full stop, no extra clicks required.
+            # This reroll-everything-unconfirmed-on-a-bare-run is what makes
+            # that true here too, while "fixed" mode (or a confirmed pose)
+            # keeps the old reproducible/locked behavior untouched. Any
+            # EXPLICIT action (reroll/edit/reroll_edit/finalize) already sets
+            # its own seed(s) above and is excluded by the `not action` check,
+            # so this can't double-randomize a pose the user just picked.
+            for i in range(5):
+                if not confirmed[i]:
+                    seeds[i] = random.randint(0, 2 ** 31 - 1)
 
         to_generate = [i for i in range(5)
                        if not confirmed[i] and (
@@ -671,7 +895,19 @@ class MuseCharacterSheetDirector:
             # confirmed/seeds state to match (it otherwise treats confirmed as
             # client-owned, to dodge a race - see update() in the JS).
             sess.clear()
-            ui["seeds"] = list(DEFAULT_SEEDS)
+            # [2026-09-20] seed_mode governs ONLY this post-finalize reset -
+            # per-pose "New seed" always picks a fresh random seed regardless
+            # of this setting (see the reroll action, unchanged). Without a
+            # "random" option here, running the SAME guide/character photos
+            # again after a completed sheet would always restart from the
+            # exact same DEFAULT_SEEDS and produce byte-identical poses - the
+            # only way to get a different result would be feeding in
+            # different images, which isn't what "just click Run again"
+            # should require.
+            if seed_mode == "random":
+                ui["seeds"] = [random.randint(0, 2 ** 31 - 1) for _ in range(5)]
+            else:
+                ui["seeds"] = list(DEFAULT_SEEDS)
             ui["confirmed"] = [False] * 5
             ui["reset"] = [True]
 

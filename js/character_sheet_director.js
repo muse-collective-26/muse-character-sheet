@@ -11,6 +11,13 @@ function defaultState() {
     confirmed: [false, false, false, false, false],
     prompts: ["", "", "", "", ""],
     previews: [null, null, null, null, null],
+    // [2026-09-20] Tracks which poses currently have an active edit applied
+    // (the instruction text, or null) - purely client-side, Python never
+    // echoes this back. It's what "New seed" checks to decide whether to
+    // re-roll the active edit (see rerollBtn.onclick) or do a normal base
+    // regeneration. Cleared whenever the base prompt is changed via "Apply
+    // prompt", since that's a deliberate "start fresh" action.
+    editInstructions: [null, null, null, null, null],
     status: null,
     action: null,
   };
@@ -109,6 +116,10 @@ function getState(stateWidget) {
       previews:
         Array.isArray(parsed.previews) && parsed.previews.length === 5
           ? parsed.previews
+          : [null, null, null, null, null],
+      editInstructions:
+        Array.isArray(parsed.editInstructions) && parsed.editInstructions.length === 5
+          ? parsed.editInstructions
           : [null, null, null, null, null],
       status: parsed.status || null,
       action: parsed.action || null,
@@ -369,10 +380,33 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
     promptWrap.appendChild(applyBtn);
     card.appendChild(promptWrap);
 
+    // [2026-09-20] Krea2Edit is an edit model too - this re-edits the pose's
+    // OWN already-generated pixels with a short targeted instruction (e.g.
+    // "add high heel shoes"), not a fresh regenerate from the guide/
+    // character references. Ported from the Klein sibling node's identical
+    // feature. Single-line input, not a full textarea - meant for short fixes.
+    const editWrap = document.createElement("div");
+    editWrap.style.cssText = "display:flex;flex-direction:column;gap:4px;margin-top:2px;";
+    const editInput = document.createElement("input");
+    editInput.type = "text";
+    editInput.placeholder = "e.g. add high heel shoes";
+    editInput.style.cssText =
+      "width:100%;padding:4px;border-radius:4px;border:1px solid #3f3f46;background:#0b0b0d;" +
+      "color:#d4d4d8;font-size:10px;font-family:inherit;box-sizing:border-box;";
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✏️ Apply edit";
+    editBtn.style.cssText =
+      "min-height:28px;padding:4px 2px;border-radius:4px;border:1px solid #a78bfa;background:#4c1d95;" +
+      "color:#ede9fe;cursor:pointer;font-size:11px;";
+    editWrap.appendChild(editInput);
+    editWrap.appendChild(editBtn);
+    card.appendChild(editWrap);
+
     grid.appendChild(card);
     panels.push({
       card, img, placeholder, seedLabel, confirmBtn, rerollBtn,
       promptToggle, promptWrap, promptArea, applyBtn,
+      editInput, editBtn,
     });
   }
 
@@ -383,11 +417,42 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
   // reverted). See run()'s ui dict in the Python - it no longer sends a
   // final_preview at all.
 
+  // [2026-09-20] Applies one edit instruction to every UNCONFIRMED pose in a
+  // single click, instead of retyping the same thing into all 5 boxes.
+  // Confirmed/locked poses are silently skipped server-side - same lock
+  // semantics as everything else here. Ported from the Klein sibling node.
+  const editAllWrap = document.createElement("div");
+  editAllWrap.style.cssText =
+    "display:flex;flex-direction:column;gap:4px;padding:8px;background:#111114;" +
+    "border:1px solid #3f3f46;border-radius:6px;box-sizing:border-box;";
+  const editAllLabel = document.createElement("div");
+  editAllLabel.textContent = "Edit all poses";
+  editAllLabel.style.cssText = "font-weight:600;font-size:11px;color:#d4d4d8;";
+  const editAllInput = document.createElement("input");
+  editAllInput.type = "text";
+  editAllInput.placeholder = "e.g. make her barefoot in every pose";
+  editAllInput.style.cssText =
+    "width:100%;padding:5px;border-radius:4px;border:1px solid #3f3f46;background:#0b0b0d;" +
+    "color:#d4d4d8;font-size:11px;font-family:inherit;box-sizing:border-box;";
+  const editAllBtn = document.createElement("button");
+  editAllBtn.textContent = "✏️ Apply edit to all";
+  editAllBtn.style.cssText =
+    "min-height:32px;padding:6px;border-radius:4px;border:1px solid #a78bfa;background:#4c1d95;" +
+    "color:#ede9fe;cursor:pointer;font-size:12px;font-weight:600;";
+  editAllWrap.appendChild(editAllLabel);
+  editAllWrap.appendChild(editAllInput);
+  editAllWrap.appendChild(editAllBtn);
+
+  // [2026-09-23] Lives inside the same bordered edit-all box, directly under
+  // "Apply edit to all", instead of floating as its own separate box below -
+  // Andy asked for it grouped in with edit-all rather than looking like an
+  // unrelated third section.
   const buildBtn = document.createElement("button");
   buildBtn.textContent = "Build final sheet now";
   buildBtn.style.cssText =
     "min-height:32px;padding:6px;border-radius:4px;border:1px solid #c2793f;background:#6b3a1a;color:#f4ddc4;cursor:pointer;font-size:12px;font-weight:600;";
-  root.appendChild(buildBtn);
+  editAllWrap.appendChild(buildBtn);
+  root.appendChild(editAllWrap);
 
   function queue() {
     app.queuePrompt(0, 1);
@@ -454,8 +519,17 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
     p.rerollBtn.disabled = isConfirmed;
     p.applyBtn.disabled = isConfirmed;
     p.promptArea.disabled = isConfirmed;
+    p.editInput.disabled = isConfirmed;
+    p.editBtn.disabled = isConfirmed;
+    p.editBtn.style.opacity = isConfirmed ? "0.45" : "1";
     p.rerollBtn.style.opacity = isConfirmed ? "0.45" : "1";
-    p.rerollBtn.title = isConfirmed ? "Unconfirm this pose before changing it" : "Generate a new seed";
+    const hasActiveEdit = !!getState(stateWidget).editInstructions?.[i];
+    p.rerollBtn.textContent = hasActiveEdit ? "\u{1F3B2} Re-roll edit" : "\u{1F3B2} New seed";
+    p.rerollBtn.title = isConfirmed
+      ? "Unconfirm this pose before changing it"
+      : hasActiveEdit
+      ? "Try the same edit again with a different seed"
+      : "Generate a new seed";
     if (isConfirmed) {
       p.card.style.borderColor = "#22c55e";
       p.confirmBtn.textContent = "✓ Unconfirm";
@@ -484,6 +558,7 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
       if (state.confirmed[i]) return; // locked - unconfirm first
       state.prompts[i] = p.promptArea.value;
       state.confirmed[i] = false;
+      state.editInstructions[i] = null;
       state.action = null;
       setState(stateWidget, state);
       refreshConfirmedVisual(i, false);
@@ -517,17 +592,53 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
     p.rerollBtn.onclick = () => {
       const state = getState(stateWidget);
       if (state.confirmed[i]) return; // locked - unconfirm first
+      const hasActiveEdit = !!state.editInstructions[i];
       const newSeed = Math.floor(Math.random() * 2147483647);
       state.seeds[i] = newSeed;
       state.confirmed[i] = false;
-      state.action = { type: "reroll", pose: i, seed: newSeed };
+      state.action = hasActiveEdit
+        ? { type: "reroll_edit", pose: i, seed: newSeed }
+        : { type: "reroll", pose: i, seed: newSeed };
       setState(stateWidget, state);
       p.seedLabel.textContent = `seed ${newSeed}`;
       refreshConfirmedVisual(i, false);
-      statusEl.textContent = `Re-rolling ${POSE_LABELS[i]}…`;
+      statusEl.textContent = hasActiveEdit
+        ? `Re-rolling edit on ${POSE_LABELS[i]}…`
+        : `Re-rolling ${POSE_LABELS[i]}…`;
+      queue();
+    };
+
+    p.editBtn.onclick = () => {
+      // [2026-09-20] Re-edits this pose's OWN current pixels with a short
+      // instruction - not a fresh regenerate. Doesn't touch state.seeds[i]
+      // (the edit pass reuses whatever seed that pose already has; see
+      // run()'s "edit" action handling in the Python).
+      const state = getState(stateWidget);
+      if (state.confirmed[i]) return;
+      const instruction = p.editInput.value.trim();
+      if (!instruction || !p.img.src) return;
+      state.editInstructions[i] = instruction;
+      state.action = { type: "edit", pose: i, instruction };
+      setState(stateWidget, state);
+      refreshConfirmedVisual(i, false);
+      statusEl.textContent = `Editing ${POSE_LABELS[i]}…`;
       queue();
     };
   });
+
+  editAllBtn.onclick = () => {
+    const instruction = editAllInput.value.trim();
+    if (!instruction) return;
+    const state = getState(stateWidget);
+    for (let i = 0; i < 5; i++) {
+      if (!state.confirmed[i]) state.editInstructions[i] = instruction;
+    }
+    state.action = { type: "edit_all", instruction };
+    setState(stateWidget, state);
+    for (let i = 0; i < 5; i++) refreshConfirmedVisual(i, state.confirmed[i]);
+    statusEl.textContent = "Editing all unlocked poses…";
+    queue();
+  };
 
   buildBtn.onclick = () => {
     const state = getState(stateWidget);
@@ -601,6 +712,7 @@ function buildCharacterSheetUI(node, stateWidget, faceWidgets) {
     st.confirmed = confirmed;
     if (prompts.length === 5) st.prompts = prompts;
     st.previews = previews.map(minimalImageRef);
+    if (isReset) st.editInstructions = [null, null, null, null, null];
     st.status = status || null;
     st.action = null;
     setState(stateWidget, st);
