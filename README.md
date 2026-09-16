@@ -14,6 +14,7 @@ Since Krea2Edit is an edit model, each pose also gets an **Apply edit** box for 
 - **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.
 - **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.
 - **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).
+- **[Muse Model Loader](https://github.com/muse-collective-26/muse-model-loader)** — This is an optional node that is in the workflow.
 
 This repo also bundles **Muse Sheet: Align Figure Height** (`MuseSheetAlignFigure`), used internally to size/align every panel in the final sheet — no separate install needed.
 

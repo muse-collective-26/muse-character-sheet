@@ -1,8 +1,8 @@
 {
   "id": "51e8d57f-952a-4169-959b-b51d83aa697b",
   "revision": 0,
-  "last_node_id": 19,
-  "last_link_id": 20,
+  "last_node_id": 20,
+  "last_link_id": 27,
   "nodes": [
     {
       "id": 6,
@@ -25,7 +25,7 @@
           "name": "anything",
           "shape": 7,
           "type": "*",
-          "link": 7
+          "link": 22
         }
       ],
       "outputs": [
@@ -145,48 +145,6 @@
       "bgcolor": "#000"
     },
     {
-      "id": 5,
-      "type": "SaveImage",
-      "pos": [
-        4324.181203692064,
-        6968.993376286615
-      ],
-      "size": [
-        1319.4467555844021,
-        1134.9652689208842
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 6
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.34.2",
-        "Node name for S&R": "SaveImage"
-      },
-      "widgets_values": [
-        "ComfyUI"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "ComfyUI"
-      },
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
       "id": 10,
       "type": "LoadImage",
       "pos": [
@@ -206,7 +164,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            20
+            23
           ]
         },
         {
@@ -252,21 +210,21 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            17
+            25
           ]
         },
         {
           "name": "clip",
           "type": "CLIP",
           "links": [
-            16
+            26
           ]
         },
         {
           "name": "vae",
           "type": "VAE",
           "links": [
-            18
+            27
           ]
         },
         {
@@ -276,6 +234,8 @@
         }
       ],
       "properties": {
+        "aux_id": "muse-collective-26/muse-model-loader",
+        "ver": "02fb218a0ae57221f4fada4975eac680ef657ca7",
         "Node name for S&R": "MuseModelLoader",
         "muse_model_loader_collapsed": {
           "profile": false,
@@ -342,6 +302,48 @@
       "bgcolor": "#000"
     },
     {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [
+        4288.479979815831,
+        6992.9797796293415
+      ],
+      "size": [
+        1319.4467555844021,
+        1134.9652689208842
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.2",
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
       "id": 4,
       "type": "LoadImage",
       "pos": [
@@ -361,7 +363,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            11
+            24
           ]
         },
         {
@@ -376,26 +378,26 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "hellogoldenvi_1780899618_3914791614805012172_1061239184.jpg",
+        "ira_asllani_1741204473_3581805191770906509_435993297.jpg",
         "image"
       ],
       "widgets_values_named": {
-        "image": "hellogoldenvi_1780899618_3914791614805012172_1061239184.jpg",
+        "image": "ira_asllani_1741204473_3581805191770906509_435993297.jpg",
         "upload": "image"
       },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 8,
+      "id": 20,
       "type": "MuseCharacterSheetDirector",
       "pos": [
-        3075.6767694937025,
-        6968.527051185199
+        3084.895770389827,
+        6992.459939625924
       ],
       "size": [
-        1224.1411391921092,
-        1284
+        1182.1499300951773,
+        598
       ],
       "flags": {},
       "order": 5,
@@ -404,30 +406,30 @@
         {
           "name": "guide_image",
           "type": "IMAGE",
-          "link": 20
+          "link": 23
         },
         {
           "name": "character_image",
           "type": "IMAGE",
-          "link": 11
+          "link": 24
         },
         {
           "name": "model_override",
           "shape": 7,
           "type": "MODEL",
-          "link": 17
+          "link": 25
         },
         {
           "name": "clip_override",
           "shape": 7,
           "type": "CLIP",
-          "link": 16
+          "link": 26
         },
         {
           "name": "vae_override",
           "shape": 7,
           "type": "VAE",
-          "link": 18
+          "link": 27
         }
       ],
       "outputs": [
@@ -435,12 +437,14 @@
           "name": "character_sheet",
           "type": "IMAGE",
           "links": [
-            6,
-            7
+            21,
+            22
           ]
         }
       ],
       "properties": {
+        "aux_id": "muse-collective-26/muse-character-sheet",
+        "ver": "4e3837633484f3ace53f81cde7ad6040085773bf",
         "Node name for S&R": "MuseCharacterSheetDirector"
       },
       "widgets_values": [
@@ -458,7 +462,8 @@
         "dpmpp_2m",
         "simple",
         0.3,
-        "{\"seeds\":[41001,41002,41003,41004,41005],\"confirmed\":[false,false,false,false,false],\"prompts\":[\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain any clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, zoomed in to head and shoulders with shoulders straight ahead.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, standing straight facing forward.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing left.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing right.\",\"Create the straight full-body BACK VIEW for a consistent character turnaround. Use image 1 for the pose, framing and body orientation. Use image 2 as the character and outfit reference. Show the same character and same outfit naturally as seen from directly behind. 100% strict visual consistency.\"],\"previews\":[{\"filename\":\"MuseCharacterSheet_00106_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00107_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00108_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00109_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00110_.png\",\"subfolder\":\"\",\"type\":\"output\"}],\"status\":\"finalized\",\"action\":null}",
+        "random",
+        "{\"seeds\":[955588580,1613102979,190855012,307103735,196282364],\"confirmed\":[false,false,false,false,false],\"prompts\":[\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, zoomed in to head and shoulders with shoulders straight ahead.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, standing straight facing forward.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing left.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing right.\",\"Use image 1 for the body orientation and crop. Then replace image with the rear view of the person on image 2. Keep the same hair, outfit colour and fabric, show the back of the garment. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, back of the body facing the camera.\"],\"previews\":[{\"filename\":\"ComfyUI_temp_zphix_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_pvpuo_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_zhnpl_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_ifmrd_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_xpncf_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"}],\"editInstructions\":[\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\"],\"status\":\"generating\",\"action\":null}",
         ""
       ],
       "widgets_values_named": {
@@ -476,7 +481,8 @@
         "face_detail_sampler": "dpmpp_2m",
         "face_detail_scheduler": "simple",
         "face_detail_denoise": 0.3,
-        "state_json": "{\"seeds\":[41001,41002,41003,41004,41005],\"confirmed\":[false,false,false,false,false],\"prompts\":[\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain any clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, zoomed in to head and shoulders with shoulders straight ahead.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, standing straight facing forward.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing left.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing right.\",\"Create the straight full-body BACK VIEW for a consistent character turnaround. Use image 1 for the pose, framing and body orientation. Use image 2 as the character and outfit reference. Show the same character and same outfit naturally as seen from directly behind. 100% strict visual consistency.\"],\"previews\":[{\"filename\":\"MuseCharacterSheet_00106_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00107_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00108_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00109_.png\",\"subfolder\":\"\",\"type\":\"output\"},{\"filename\":\"MuseCharacterSheet_00110_.png\",\"subfolder\":\"\",\"type\":\"output\"}],\"status\":\"finalized\",\"action\":null}",
+        "seed_mode": "random",
+        "state_json": "{\"seeds\":[955588580,1613102979,190855012,307103735,196282364],\"confirmed\":[false,false,false,false,false],\"prompts\":[\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, zoomed in to head and shoulders with shoulders straight ahead.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, standing straight facing forward.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing left.\",\"Use image 1 for the body orientation and crop. Then replace image with the exact person on image 2. Retain ALL clothing, facial features and hair. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, body turned to show a side profile facing right.\",\"Use image 1 for the body orientation and crop. Then replace image with the rear view of the person on image 2. Keep the same hair, outfit colour and fabric, show the back of the garment. Final image should be on white backgrounds with arms by the side, full body visible from head to toe, back of the body facing the camera.\"],\"previews\":[{\"filename\":\"ComfyUI_temp_zphix_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_pvpuo_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_zhnpl_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_ifmrd_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"},{\"filename\":\"ComfyUI_temp_xpncf_00001_.png\",\"subfolder\":\"\",\"type\":\"temp\"}],\"editInstructions\":[\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\",\"change the character to an anime style\"],\"status\":\"generating\",\"action\":null}",
         "character_sheet_director_ui": ""
       },
       "color": "#222",
@@ -507,10 +513,10 @@
         }
       },
       "widgets_values": [
-        "# Muse Character Sheet\n\n[Krea 2](https://huggingface.co/krea/Krea-2-Turbo) is Krea AI's instruction-based image editing model. **Muse Character Sheet** is a single ComfyUI node that generates a full 5-pose character turnaround (portrait, front, left profile, right profile, back) from one mannequin pose guide + one character reference photo, using Krea 2 Edit with identity-preserving LoRAs.\n\nInstead of wiring up five separate Krea2Edit chains by hand, the node runs all five internally and gives you a **Confirm** / **New seed** button per pose in its own panel. Confirm is a pure local lock — it doesn't submit anything on its own. Once every pose is confirmed, click **Build final sheet now** to assemble the final 4096x2304 sheet.\n\n## ⚠️ Required custom nodes — install these BEFORE you run anything\n\n**ComfyUI's own \"Install Missing Custom Nodes\" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.\n\n- **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.\n- **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.\n- **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.\n- **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).\n\n## Model Links\n\n### Diffusion model (used by the `unet_name` widget)\n\n[🤗 Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2)\n\n**diffusion_models**\n- [krea2_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors) (13.5 GB)\n\n### Text encoder (`clip_name`, type `krea2`)\n\n- [qwen3vl_4b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) (5.24 GB) — same repo as above, `text_encoders/` subfolder\n\n### VAE (`vae_name`)\n\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) (254 MB) — same repo, `vae/` subfolder\n\n### LoRAs\n\n[🤗 conradlocke/krea2-identity-edit](https://huggingface.co/conradlocke/krea2-identity-edit)\n- [krea2_identity_edit_v1_2.safetensors](https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_identity_edit_v1_2.safetensors) — `identity_lora` widget. The official Identity Edit LoRA behind `comfyui-krea2edit`.\n\n[🤗 ivanlf98/DetailerKrea](https://huggingface.co/ivanlf98/DetailerKrea)\n- [Detailer-KREA2.safetensors](https://huggingface.co/ivanlf98/DetailerKrea/resolve/main/Detailer-KREA2.safetensors) — used as `lora_3` in the Muse Model Loader instance feeding this node.\n\n[🤗 uzumix/krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors)\n- [krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors/resolve/main/krea2filterbypass3.safetensors) — `filter_bypass_lora` widget (save it locally as `krea2filterbypass3_fp32.safetensors`, or just keep the downloaded filename and point the widget at whatever you call it). \n\n## Model Storage Locations\n\n- `ComfyUI/models/diffusion_models/` — `krea2_turbo_int8_convrot.safetensors`\n- `ComfyUI/models/text_encoders/` — `qwen3vl_4b_fp8_scaled.safetensors`\n- `ComfyUI/models/vae/` — `qwen_image_vae.safetensors`\n- `ComfyUI/models/loras/Krea2/` — `krea2_identity_edit_v1_2.safetensors`, `krea2filterbypass3_fp32.safetensors`, `Detailer-KREA2.safetensors`\n- `ComfyUI/models/ultralytics/bbox/` — `face_yolov8m.pt` *(only needed if you enable Face Detail; ships/auto-downloads with Impact-Subpack)*\n\n## Links\n- [Krea 2 on Hugging Face](https://huggingface.co/krea/Krea-2-Turbo)\n- [🤗 Comfy-Org/Krea-2 (ComfyUI-ready weights)](https://huggingface.co/Comfy-Org/Krea-2)\n- [Muse Character Sheet on GitHub](https://github.com/muse-collective-26/muse-character-sheet)\n- [Muse Model Loader on GitHub](https://github.com/muse-collective-26/muse-model-loader)"
+        "# Muse Character Sheet\n\n[Krea 2](https://huggingface.co/krea/Krea-2-Turbo) is Krea AI's instruction-based image editing model. **Muse Character Sheet** is a single ComfyUI node that generates a full 5-pose character turnaround (portrait, front, left profile, right profile, back) from one mannequin pose guide + one character reference photo, using Krea 2 Edit with identity-preserving LoRAs.\n\nInstead of wiring up five separate Krea2Edit chains by hand, the node runs all five internally and gives you a **Confirm** / **New seed** button per pose in its own panel. Confirm is a pure local lock — it doesn't submit anything on its own. Once every pose is confirmed, click **Build final sheet now** to assemble the final 4096x2304 sheet.\n\n## ⚠️ Required custom nodes — install these BEFORE you run anything\n\n**ComfyUI's own \"Install Missing Custom Nodes\" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.\n\n- **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.\n- **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.\n- **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.\n- **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).\n- **[Muse Model Loader](https://github.com/muse-collective-26/muse-model-loader)** — This is an optional node that is in the workflow.\n\n## Model Links\n\n### Diffusion model (used by the `unet_name` widget)\n\n[🤗 Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2)\n\n**diffusion_models**\n- [krea2_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors) (13.5 GB)\n\n### Text encoder (`clip_name`, type `krea2`)\n\n- [qwen3vl_4b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) (5.24 GB) — same repo as above, `text_encoders/` subfolder\n\n### VAE (`vae_name`)\n\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) (254 MB) — same repo, `vae/` subfolder\n\n### LoRAs\n\n[🤗 conradlocke/krea2-identity-edit](https://huggingface.co/conradlocke/krea2-identity-edit)\n- [krea2_identity_edit_v1_2.safetensors](https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_identity_edit_v1_2.safetensors) — `identity_lora` widget. The official Identity Edit LoRA behind `comfyui-krea2edit`.\n\n[🤗 ivanlf98/DetailerKrea](https://huggingface.co/ivanlf98/DetailerKrea)\n- [Detailer-KREA2.safetensors](https://huggingface.co/ivanlf98/DetailerKrea/resolve/main/Detailer-KREA2.safetensors) — used as `lora_3` in the Muse Model Loader instance feeding this node.\n\n[🤗 uzumix/krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors)\n- [krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors/resolve/main/krea2filterbypass3.safetensors) — `filter_bypass_lora` widget (save it locally as `krea2filterbypass3_fp32.safetensors`, or just keep the downloaded filename and point the widget at whatever you call it). \n\n## Model Storage Locations\n\n- `ComfyUI/models/diffusion_models/` — `krea2_turbo_int8_convrot.safetensors`\n- `ComfyUI/models/text_encoders/` — `qwen3vl_4b_fp8_scaled.safetensors`\n- `ComfyUI/models/vae/` — `qwen_image_vae.safetensors`\n- `ComfyUI/models/loras/Krea2/` — `krea2_identity_edit_v1_2.safetensors`, `krea2filterbypass3_fp32.safetensors`, `Detailer-KREA2.safetensors`\n- `ComfyUI/models/ultralytics/bbox/` — `face_yolov8m.pt` *(only needed if you enable Face Detail; ships/auto-downloads with Impact-Subpack)*\n\n## Links\n- [Krea 2 on Hugging Face](https://huggingface.co/krea/Krea-2-Turbo)\n- [🤗 Comfy-Org/Krea-2 (ComfyUI-ready weights)](https://huggingface.co/Comfy-Org/Krea-2)\n- [Muse Character Sheet on GitHub](https://github.com/muse-collective-26/muse-character-sheet)\n- [Muse Model Loader on GitHub](https://github.com/muse-collective-26/muse-model-loader)"
       ],
       "widgets_values_named": {
-        "text": "# Muse Character Sheet\n\n[Krea 2](https://huggingface.co/krea/Krea-2-Turbo) is Krea AI's instruction-based image editing model. **Muse Character Sheet** is a single ComfyUI node that generates a full 5-pose character turnaround (portrait, front, left profile, right profile, back) from one mannequin pose guide + one character reference photo, using Krea 2 Edit with identity-preserving LoRAs.\n\nInstead of wiring up five separate Krea2Edit chains by hand, the node runs all five internally and gives you a **Confirm** / **New seed** button per pose in its own panel. Confirm is a pure local lock — it doesn't submit anything on its own. Once every pose is confirmed, click **Build final sheet now** to assemble the final 4096x2304 sheet.\n\n## ⚠️ Required custom nodes — install these BEFORE you run anything\n\n**ComfyUI's own \"Install Missing Custom Nodes\" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.\n\n- **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.\n- **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.\n- **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.\n- **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).\n\n## Model Links\n\n### Diffusion model (used by the `unet_name` widget)\n\n[🤗 Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2)\n\n**diffusion_models**\n- [krea2_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors) (13.5 GB)\n\n### Text encoder (`clip_name`, type `krea2`)\n\n- [qwen3vl_4b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) (5.24 GB) — same repo as above, `text_encoders/` subfolder\n\n### VAE (`vae_name`)\n\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) (254 MB) — same repo, `vae/` subfolder\n\n### LoRAs\n\n[🤗 conradlocke/krea2-identity-edit](https://huggingface.co/conradlocke/krea2-identity-edit)\n- [krea2_identity_edit_v1_2.safetensors](https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_identity_edit_v1_2.safetensors) — `identity_lora` widget. The official Identity Edit LoRA behind `comfyui-krea2edit`.\n\n[🤗 ivanlf98/DetailerKrea](https://huggingface.co/ivanlf98/DetailerKrea)\n- [Detailer-KREA2.safetensors](https://huggingface.co/ivanlf98/DetailerKrea/resolve/main/Detailer-KREA2.safetensors) — used as `lora_3` in the Muse Model Loader instance feeding this node.\n\n[🤗 uzumix/krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors)\n- [krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors/resolve/main/krea2filterbypass3.safetensors) — `filter_bypass_lora` widget (save it locally as `krea2filterbypass3_fp32.safetensors`, or just keep the downloaded filename and point the widget at whatever you call it). \n\n## Model Storage Locations\n\n- `ComfyUI/models/diffusion_models/` — `krea2_turbo_int8_convrot.safetensors`\n- `ComfyUI/models/text_encoders/` — `qwen3vl_4b_fp8_scaled.safetensors`\n- `ComfyUI/models/vae/` — `qwen_image_vae.safetensors`\n- `ComfyUI/models/loras/Krea2/` — `krea2_identity_edit_v1_2.safetensors`, `krea2filterbypass3_fp32.safetensors`, `Detailer-KREA2.safetensors`\n- `ComfyUI/models/ultralytics/bbox/` — `face_yolov8m.pt` *(only needed if you enable Face Detail; ships/auto-downloads with Impact-Subpack)*\n\n## Links\n- [Krea 2 on Hugging Face](https://huggingface.co/krea/Krea-2-Turbo)\n- [🤗 Comfy-Org/Krea-2 (ComfyUI-ready weights)](https://huggingface.co/Comfy-Org/Krea-2)\n- [Muse Character Sheet on GitHub](https://github.com/muse-collective-26/muse-character-sheet)\n- [Muse Model Loader on GitHub](https://github.com/muse-collective-26/muse-model-loader)"
+        "text": "# Muse Character Sheet\n\n[Krea 2](https://huggingface.co/krea/Krea-2-Turbo) is Krea AI's instruction-based image editing model. **Muse Character Sheet** is a single ComfyUI node that generates a full 5-pose character turnaround (portrait, front, left profile, right profile, back) from one mannequin pose guide + one character reference photo, using Krea 2 Edit with identity-preserving LoRAs.\n\nInstead of wiring up five separate Krea2Edit chains by hand, the node runs all five internally and gives you a **Confirm** / **New seed** button per pose in its own panel. Confirm is a pure local lock — it doesn't submit anything on its own. Once every pose is confirmed, click **Build final sheet now** to assemble the final 4096x2304 sheet.\n\n## ⚠️ Required custom nodes — install these BEFORE you run anything\n\n**ComfyUI's own \"Install Missing Custom Nodes\" may not catch all of these** — some are used internally by the node's own code, not as separate nodes on the canvas.\n\n- **[comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit)** — image-grounded instruction encoding for Krea 2 (`Krea2EditGroundedEncode`). Required unconditionally.\n- **[ComfyUI-Krea2-NAG](https://github.com/iljung1106/ComfyUI-Krea2-NAG)** — Normalized Attention Guidance for Krea2Edit (`Krea2EditNormalizedAttentionGuidance`). Required unconditionally.\n- **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** — required for the white-background cleanup run on every pose. The RMBG-2.0 model it uses auto-downloads on first use.\n- **[ComfyUI-Impact-Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack)** + **[ComfyUI-Impact-Subpack](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)** — only required if you enable the node's **Face Detail** pass (off by default).\n- **[Muse Model Loader](https://github.com/muse-collective-26/muse-model-loader)** — This is an optional node that is in the workflow.\n\n## Model Links\n\n### Diffusion model (used by the `unet_name` widget)\n\n[🤗 Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2)\n\n**diffusion_models**\n- [krea2_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors) (13.5 GB)\n\n### Text encoder (`clip_name`, type `krea2`)\n\n- [qwen3vl_4b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) (5.24 GB) — same repo as above, `text_encoders/` subfolder\n\n### VAE (`vae_name`)\n\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) (254 MB) — same repo, `vae/` subfolder\n\n### LoRAs\n\n[🤗 conradlocke/krea2-identity-edit](https://huggingface.co/conradlocke/krea2-identity-edit)\n- [krea2_identity_edit_v1_2.safetensors](https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_identity_edit_v1_2.safetensors) — `identity_lora` widget. The official Identity Edit LoRA behind `comfyui-krea2edit`.\n\n[🤗 ivanlf98/DetailerKrea](https://huggingface.co/ivanlf98/DetailerKrea)\n- [Detailer-KREA2.safetensors](https://huggingface.co/ivanlf98/DetailerKrea/resolve/main/Detailer-KREA2.safetensors) — used as `lora_3` in the Muse Model Loader instance feeding this node.\n\n[🤗 uzumix/krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors)\n- [krea2filterbypass3.safetensors](https://huggingface.co/uzumix/krea2filterbypass3.safetensors/resolve/main/krea2filterbypass3.safetensors) — `filter_bypass_lora` widget (save it locally as `krea2filterbypass3_fp32.safetensors`, or just keep the downloaded filename and point the widget at whatever you call it). \n\n## Model Storage Locations\n\n- `ComfyUI/models/diffusion_models/` — `krea2_turbo_int8_convrot.safetensors`\n- `ComfyUI/models/text_encoders/` — `qwen3vl_4b_fp8_scaled.safetensors`\n- `ComfyUI/models/vae/` — `qwen_image_vae.safetensors`\n- `ComfyUI/models/loras/Krea2/` — `krea2_identity_edit_v1_2.safetensors`, `krea2filterbypass3_fp32.safetensors`, `Detailer-KREA2.safetensors`\n- `ComfyUI/models/ultralytics/bbox/` — `face_yolov8m.pt` *(only needed if you enable Face Detail; ships/auto-downloads with Impact-Subpack)*\n\n## Links\n- [Krea 2 on Hugging Face](https://huggingface.co/krea/Krea-2-Turbo)\n- [🤗 Comfy-Org/Krea-2 (ComfyUI-ready weights)](https://huggingface.co/Comfy-Org/Krea-2)\n- [Muse Character Sheet on GitHub](https://github.com/muse-collective-26/muse-character-sheet)\n- [Muse Model Loader on GitHub](https://github.com/muse-collective-26/muse-model-loader)"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -526,70 +532,70 @@
       "*"
     ],
     [
-      6,
-      8,
+      21,
+      20,
       0,
       5,
       0,
       "IMAGE"
     ],
     [
-      7,
-      8,
+      22,
+      20,
       0,
       6,
       0,
       "IMAGE"
     ],
     [
-      11,
+      23,
+      10,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      24,
       4,
       0,
-      8,
+      20,
       1,
       "IMAGE"
     ],
     [
-      16,
-      18,
-      1,
-      8,
-      3,
-      "CLIP"
-    ],
-    [
-      17,
+      25,
       18,
       0,
-      8,
+      20,
       2,
       "MODEL"
     ],
     [
+      26,
       18,
-      18,
-      2,
-      8,
-      4,
-      "VAE"
+      1,
+      20,
+      3,
+      "CLIP"
     ],
     [
+      27,
+      18,
+      2,
       20,
-      10,
-      0,
-      8,
-      0,
-      "IMAGE"
+      4,
+      "VAE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5559917313492335,
+      "scale": 1.586309297171554,
       "offset": [
-        -684.3229643467743,
-        -6583.582310859809
+        -955.4133381528173,
+        -6901.708241260036
       ]
     },
     "frontendVersion": "1.49.6",
